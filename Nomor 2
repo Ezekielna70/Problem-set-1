@@ -1,0 +1,197 @@
+#include <iostream>
+#include <stack>
+#include <string>
+using namespace std;
+
+int operandsOrder(char start) {
+    // Order operasi
+    int importance = 0;
+    switch (start) {
+    case '*':
+        importance = 2;
+        break;
+    case '/':
+        importance = 2;
+        break;
+    case '-':
+        importance = 1;
+        break;
+    case '+':
+        importance = 1;
+        break;
+    }
+    return importance;
+}
+
+bool isOperator(char start) {
+    // cek kalo dia math ooperator atau bukan
+    switch (start) {
+    case '+':
+        return true;
+        break;
+    case '-':
+        return true;
+        break;
+    case '*':
+        return true;
+        break;
+    case '/':
+        return true;
+        break;
+    default:
+        return false;
+        break;
+    }
+}
+
+string infixToPostfix(string inF) 
+{
+    string postF;
+    stack<char> cStack;
+
+    for (int x = 0; x < inF.length(); x++) 
+    {
+
+        if (isdigit(inF[x])) 
+        {
+            if (postF.length() > 0 && !isdigit(postF.back())) 
+            {
+                if (!isspace(postF.back())) 
+                {
+                    postF += " "; 
+                }
+            }
+            postF += inF[x]; 
+        }
+        else if (isOperator(inF[x])) 
+        {  
+            if (postF.length() > 0 && !isspace(postF.back())) 
+            { 
+                postF += " ";
+            }
+         
+            while ((!cStack.empty()) && (operandsOrder(cStack.top()) >= operandsOrder(inF[x]))) 
+            {
+                if (postF.length() > 0 && !isspace(postF.back())) 
+                { 
+                    postF += " ";
+                }
+                postF += cStack.top();
+                cStack.pop(); 
+            }
+            
+            cStack.push(inF[x]);
+        }
+        else if (inF[x] == '(') 
+        { 
+            cStack.push(inF[x]);
+
+        }
+        else if (inF[x] == ')') 
+        { 
+            while ((!cStack.empty()) && (cStack.top() != '(')) 
+            {
+                if (postF.length() > 0 && !isspace(postF.back())) 
+                { 
+                    postF += " ";
+                }
+
+                postF += cStack.top(); 
+                cStack.pop(); 
+            }
+
+         
+            if (!cStack.empty()) 
+            {
+                cStack.pop();
+            }
+            else 
+            {
+                throw invalid_argument
+                {
+                    "ERROR: WRONG BRACKETS"
+                };
+            }
+        }
+        else 
+        {
+            throw invalid_argument
+            {
+                "ERROR: WRONG INPUT"
+            };
+        }
+    }
+
+    
+    while (!cStack.empty()) 
+    {
+        if (postF.length() > 0 && !isspace(postF.back())) 
+        { 
+            postF += " ";
+        }
+        postF += cStack.top(); 
+        cStack.pop(); 
+    }
+    return postF;
+}
+
+int eval(string postF) 
+{
+    stack<int> ns; 
+    for (int i = 0; i < postF.length(); i++) 
+    {
+        char c = postF[i];
+        if (c == ' ') 
+        { 
+            continue;
+        }
+        else if (isdigit(c)) 
+        {
+
+            int n = 0;
+            while (isdigit(c)) 
+            {
+                n = n * 10 + (int)(c - '0');
+                i++;
+                c = postF[i];
+            }
+            i--;
+            ns.push(n); 
+
+        }
+        else 
+        {
+            int val1 = ns.top(); ns.pop(); 
+            int val2 = ns.top(); ns.pop();
+            switch (c) {
+            case '+':
+                ns.push(val2 + val1);
+                break;
+            case '-':
+                ns.push(val2 - val1);
+                break;
+            case '*':
+                ns.push(val2 * val1);
+                break;
+            case '/':
+                ns.push(val2 / val1);
+                break;
+            default:
+                throw invalid_argument{
+                    "ERROR: WRONG OPERATOR"
+                };
+                break;
+            }
+        }
+    }
+    return ns.top();
+}
+
+
+int main() {
+    string input = "(2+3)*3-(10/5)";
+    string postF = infixToPostfix(input);
+    cout << eval(postF);
+
+    return 0;
+}
